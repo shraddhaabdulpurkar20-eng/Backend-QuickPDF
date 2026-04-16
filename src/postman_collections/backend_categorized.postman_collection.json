@@ -1,0 +1,157 @@
+{
+  "info": {
+    "name": "Backend API Collection Categorized",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Signup",
+          "request": {
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\",\n  \"address\": \"123 Main St\",\n  \"std\": \"10\"\n}" },
+            "url": { "raw": "{{baseUrl}}/signup", "host": ["{{baseUrl}}"], "path": ["signup"] }
+          }
+        },
+        {
+          "name": "Signin",
+          "request": {
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"john@example.com\",\n  \"password\": \"password123\"\n}" },
+            "url": { "raw": "{{baseUrl}}/signin", "host": ["{{baseUrl}}"], "path": ["signin"] }
+          }
+        },
+        {
+          "name": "Profile",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/profile", "host": ["{{baseUrl}}"], "path": ["profile"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Add Item to Cart",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"cartItems\": {\n    \"product\": \"productId\",\n    \"quantity\": 1\n  }\n}" },
+            "url": { "raw": "{{baseUrl}}/user/cart/addtocart", "host": ["{{baseUrl}}"], "path": ["user", "cart", "addtocart"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Category",
+      "item": [
+        {
+          "name": "Create Category",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Electronics\",\n  \"parentId\": \"parentCategoryId\"\n}" },
+            "url": { "raw": "{{baseUrl}}/category/create", "host": ["{{baseUrl}}"], "path": ["category", "create"] }
+          }
+        },
+        {
+          "name": "Get Categories",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/category/getcategory", "host": ["{{baseUrl}}"], "path": ["category", "getcategory"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "name", "value": "Phone", "type": "text" },
+                { "key": "price", "value": "1000", "type": "text" },
+                { "key": "description", "value": "Smartphone", "type": "text" },
+                { "key": "category", "value": "categoryId", "type": "text" },
+                { "key": "quantity", "value": "10", "type": "text" },
+                { "key": "productPicture", "type": "file" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/product/create", "host": ["{{baseUrl}}"], "path": ["product", "create"] }
+          }
+        },
+        {
+          "name": "Get Products",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/product/getProducts", "host": ["{{baseUrl}}"], "path": ["product", "getProducts"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Production",
+      "item": [
+        {
+          "name": "Add Production",
+          "request": {
+            "method": "POST",
+            "body": { "mode": "raw", "raw": "{\n  \"productionID\": \"prod123\",\n  \"batchNumber\": \"batch1\",\n  \"quantityProduction\": 100,\n  \"unit\": \"kg\",\n  \"productionDate\": \"2026-03-01\",\n  \"factoryID\": \"factory1\"\n}" },
+            "url": { "raw": "{{baseUrl}}/production", "host": ["{{baseUrl}}"], "path": ["production"] }
+          }
+        },
+        {
+          "name": "Get Production",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/production", "host": ["{{baseUrl}}"], "path": ["production"] }
+          }
+        },
+        {
+          "name": "Get Production By ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/getProductionID?productionID=prod123", "host": ["{{baseUrl}}"], "path": ["getProductionID"], "query": [{ "key": "productionID", "value": "prod123" }] }
+          }
+        },
+        {
+          "name": "Update Production",
+          "request": {
+            "method": "PUT",
+            "body": { "mode": "raw", "raw": "{\n  \"_id\": \"productionObjectId\",\n  \"quantityProduced\": 120,\n  \"unit\": \"kg\"\n}" },
+            "url": { "raw": "{{baseUrl}}/updateProduction", "host": ["{{baseUrl}}"], "path": ["updateProduction"] }
+          }
+        },
+        {
+          "name": "Update Production By ID",
+          "request": {
+            "method": "PUT",
+            "body": { "mode": "raw", "raw": "{\n  \"productId\": \"prod123\",\n  \"quantityProduced\": 130,\n  \"unit\": \"kg\"\n}" },
+            "url": { "raw": "{{baseUrl}}/updateProductionID", "host": ["{{baseUrl}}"], "path": ["updateProductionID"] }
+          }
+        },
+        {
+          "name": "Delete Production By ID",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/deleteProductionID", "host": ["{{baseUrl}}"], "path": ["deleteProductionID"] }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api" },
+    { "key": "token", "value": "" }
+  ]
+}
