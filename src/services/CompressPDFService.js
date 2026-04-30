@@ -1,29 +1,14 @@
+const { exec } = require("child_process");
 
-const fs = require("fs");
-const { PDFDocument } = require("pdf-lib");
+const CompressPDF = (inputPath, outputPath, quality = "ebook") => {
+    return new Promise((resolve, reject) => {
+        const cmd = `gswin64c -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dPDFSETTINGS=/${quality} -dNOPAUSE -dQUIET -dBATCH -sOutputFile="${outputPath}" "${inputPath}"`;
 
-const CompressPDF = async (inputPath, outputPath) => {
-    const existingPdfBytes = fs.readFileSync(inputPath);
-
-    // ✅ Validate PDF header
-    const header = existingPdfBytes.toString("utf8", 0, 5);
-    if (header !== "%PDF-") {
-        throw new Error("Invalid PDF file");
-    }
-
-    const pdfDoc = await PDFDocument.load(existingPdfBytes);
-
-    pdfDoc.setTitle("");
-    pdfDoc.setAuthor("");
-    pdfDoc.setSubject("");
-    pdfDoc.setKeywords([]);
-
-    const pdfBytes = await pdfDoc.save({
-        useObjectStreams: true,
+        exec(cmd, (error) => {
+            if (error) return reject(error);
+            resolve(outputPath);
+        });
     });
-
-    fs.writeFileSync(outputPath, pdfBytes);
-    return outputPath;
 };
 
 module.exports = CompressPDF;

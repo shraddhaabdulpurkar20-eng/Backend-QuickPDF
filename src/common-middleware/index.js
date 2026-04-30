@@ -1,78 +1,122 @@
-
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
-const path = require("path");
+const fs = require("fs");
 
+// Ensure uploads folder exists
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
-// Multer setup
+// ✅ Multer Storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "uploads/");
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + "-" + file.originalname);
+    const uniqueName =
+      Date.now() + "-" + file.originalname.replace(/\s+/g, "_");
+    cb(null, uniqueName);
   },
 });
 
+// ✅ File Filter
+const fileFilter = (req, file, cb) => {
+  const allowedMimeTypes = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
+  ];
+
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return cb(new Error("Only JPG, PNG, or PDF files allowed"), false);
+  }
+
+  cb(null, true);
+};
+
+// ✅ Upload Config
 const upload = multer({
   storage,
-  fileFilter: (req, file, cb) => {
-    const allowedMimeTypes = [
-      "image/jpeg",
-      "image/png",
-      "application/pdf",
-    ];
-
-
-
-    console.log("File Name:", file.originalname);
-    console.log("Mimetype:", file.mimetype);
-
-    if (!allowedMimeTypes.includes(file.mimetype)) {
-      return cb(new Error("Only image or PDF files allowed"), false);
-    }
-
-
-    cb(null, true);
-  }
+  fileFilter,
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB
+  },
 });
 
-
-// Auth middleware
+// ✅ AUTH MIDDLEWARE (USED FOR VERIFY / PROFILE)
 const requireSignin = (req, res, next) => {
-  const token = req.headers.authorization;
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
-    return res.status(401).json({ message: "No token found" });
+  // 🔥 Better check
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({
+      success: false,
+      message: "Authorization token missing",
+    });
   }
 
   try {
-    const user = jwt.verify(token.split(" ")[1], process.env.JWT_SECRET);
-    req.user = user;
+    const token = authHeader.split(" ")[1];
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    req.user = decoded; // ✅ important for /verify
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Invalid token" });
+    return res.status(401).json({
+      success: false,
+      message: "Invalid or expired token",
+    });
   }
 };
 
-// Role middleware
+
+// 🔥 OPTIONAL (BEST FOR YOUR REQUIREMENT)
+// Allow guest OR logged-in user
+const optionalSignin = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (authHeader && authHeader.startsWith("Bearer ")) {
+    try {
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = decoded; // logged-in user
+    } catch {
+      req.user = null; // invalid token
+    }
+  } else {
+    req.user = null; // guest user
+  }
+
+  next();
+};
+
+
+// ✅ Role Middlewares
 const userMiddleware = (req, res, next) => {
-  if (req.user.role !== "user") {
-    return res.status(400).json({ message: "User access denied" });
+  if (!req.user || req.user.role !== "user") {
+    return res.status(403).json({
+      success: false,
+      message: "User access denied",
+    });
   }
   next();
 };
 
 const adminMiddleware = (req, res, next) => {
-  if (req.user.role !== "admin") {
-    return res.status(400).json({ message: "Admin access denied" });
+  if (!req.user || req.user.role !== "admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Admin access denied",
+    });
   }
   next();
 };
 
-// ✅ Export everything together
+// ✅ Export
 module.exports = {
   requireSignin,
+  optionalSignin,   // 🔥 NEW (important)
   userMiddleware,
   adminMiddleware,
   upload,

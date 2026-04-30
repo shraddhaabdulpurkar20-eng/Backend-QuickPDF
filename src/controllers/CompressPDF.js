@@ -1,4 +1,3 @@
-
 const fs = require("fs");
 const path = require("path");
 const CompressPDFModel = require("../models/CompressPDF");
@@ -12,43 +11,60 @@ exports.CompressPDF = async (req, res) => {
 
         const inputPath = req.file.path;
 
-        // ✅ Validate PDF (REAL CHECK)
+        // ✅ Validate PDF
         const buffer = fs.readFileSync(inputPath);
-        const header = buffer.toString("utf8", 0, 5);
-
-        if (header !== "%PDF-") {
-            return res.status(400).json({
-                message: "Invalid PDF file",
-            });
+        if (buffer.toString("utf8", 0, 5) !== "%PDF-") {
+            fs.unlinkSync(inputPath);
+            return res.status(400).json({ message: "Invalid PDF file" });
         }
+
+        const quality = (req.body.quality || "ebook").trim().toLowerCase();
 
         const outputPath = path.join(
             "uploads",
-            "compressed_" + Date.now() + ".pdf"
+            `compressed_${Date.now()}.pdf`
         );
 
-        await CompressPDFService(inputPath, outputPath);
+        await CompressPDFService(inputPath, outputPath, quality);
 
         const originalSize = fs.statSync(inputPath).size;
         const compressedSize = fs.statSync(outputPath).size;
 
-        // ✅ Save to DB
-        await CompressPDFModel.create({
-            originalFileName: req.file.originalname,
-            compressedFileUrl: outputPath,
-            quality: "ebook",
-            originalSize,
-            compressedSize,
-        });
+        let finalPath = outputPath;
+        let finalSize = compressedSize;
+        let reduction = 0;
 
-        return res.download(outputPath);
+        if (compressedSize >= originalSize) {
+            finalPath = inputPath;
+            finalSize = originalSize;
+        } else {
+            reduction = (
+                ((originalSize - compressedSize) / originalSize) * 100
+            ).toFixed(0);
 
-    } catch (error) {
-        console.error(error);
+            await CompressPDFModel.create({
+                originalFileName: req.file.originalname,
+                compressedFileUrl: outputPath,
+                quality,
+                originalSize,
+                compressedSize,
+            });
 
-        res.status(500).json({
+            fs.unlinkSync(inputPath);
+        }
+
+        // ✅ SEND HEADERS
+        res.setHeader("X-Original-Size", originalSize);
+        res.setHeader("X-Compressed-Size", finalSize);
+        res.setHeader("X-Reduction", reduction);
+
+        return res.download(finalPath);
+
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
             message: "Compression failed",
-            error: error.message,
+            error: err.message,
         });
     }
 };

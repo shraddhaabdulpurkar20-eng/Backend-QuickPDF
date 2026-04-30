@@ -17,6 +17,7 @@ const compressPDFSchema = new mongoose.Schema(
             type: String,
             enum: ["screen", "ebook", "printer", "prepress"],
             default: "ebook",
+            trim: true, // 🔥 important
         },
         originalSize: {
             type: Number, // in bytes
@@ -29,4 +30,5 @@ const compressPDFSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("CompressPDF", compressPDFSchema);
+
 
